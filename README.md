@@ -30,8 +30,8 @@ Instruções técnicas para clonagem, compilação e execução do projeto a par
 
 1. **Clonar o repositório:**
    ```bash
-   git clone [https://github.com/Dufru/](https://github.com/Dufru/)[NOME-DO-REPOSITORIO].git
-   cd [NOME-DO-REPOSITORIO]
+   git clone https://github.com/Dufru/gestao-financeira-multicontextual
+   cd gestao-financeira-multicontextual
 
 
 
