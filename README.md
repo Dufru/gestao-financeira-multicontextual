@@ -8,24 +8,6 @@ Projeto acadêmico desenvolvido para a disciplina de Desenvolvimento Mobile Nati
 
 A aplicação adota o padrão de arquitetura **MVVM (Model-View-ViewModel)** integrado ao padrão **Repository** e suporte à biblioteca **Room Database** para persistência local de dados.
 
-
-
-+-------------------------------------------------------------------+
-|                        CAMADA DE APRESENTAÇÃO                     |
-|  [ Screens / UI ] (Emanuel) <---> [ ViewModels / Logic ] (Danilo) |
-+-------------------------------------------------------------------+
-|
-v
-+-------------------------------------------------------------------+
-|                           CAMADA DE DADOS                         |
-|      [ Repository ] <---> [ Room Data Access Objects (DAOs) ]     |
-|                                 | (Pedro)                         |
-|                                 v                                 |
-|                       [ SQLite Database ]                         |
-+-------------------------------------------------------------------+
-
-
-
 ### Divisão de Responsabilidades
 * **Pedro:** Modelagem do banco de dados local (Room), DAOs, repositório e testes de persistência.
 * **Danilo:** Lógica de perfil ativo (Pessoal, Profissional, Conjunto), cálculo de saldo consolidado e rateio de despesas.
