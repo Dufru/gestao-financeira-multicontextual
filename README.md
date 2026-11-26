@@ -1,64 +1,110 @@
-# Gestao Financeira Multicontextual
+# Gestão Financeira Multicontextual
 
-Projeto acadêmico desenvolvido para a disciplina de Desenvolvimento Mobile Nativo (5º Semestre - Sistemas de Informação - Unex). A aplicação consiste em um sistema de controle financeiro móvel com suporte a múltiplos perfis de isolamento e compartilhamento de contas (Pessoal, Profissional e Conjunto).
+Aplicativo Android em Flutter para registrar receitas e despesas em três contextos separados: **Pessoal**, **Profissional** e **Conjunto**. Os dados ficam em um banco SQLite local no aparelho.
 
----
+## O que o aplicativo faz
 
-## 1. Arquitetura do Sistema
+- Alterna entre os contextos financeiro pessoal, profissional e conjunto.
+- Mostra entradas, saídas e saldo do mês do contexto selecionado, além do consolidado mensal.
+- Cadastra, edita, filtra e exclui lançamentos com descrição, valor, categoria e data.
+- Separa os lançamentos por contexto e valida os campos antes de salvar.
+- Registra despesas compartilhadas no contexto Conjunto e calcula o acerto igualitário entre “Você” e “Outra pessoa”, sem perder centavos no rateio.
+- Persiste os dados no aparelho, inclusive após fechar e abrir o aplicativo.
 
-A aplicação adota o padrão de arquitetura **MVVM (Model-View-ViewModel)** integrado ao padrão **Repository** e suporte à biblioteca **Room Database** para persistência local de dados.
+O projeto ainda não oferece login, sincronização entre aparelhos, cadastro de participantes ou ajuste de percentuais do rateio. As despesas compartilhadas usam divisão 50/50.
 
-### Divisão de Responsabilidades
-* **Pedro:** Modelagem do banco de dados local (Room), DAOs, repositório e testes de persistência.
-* **Danilo:** Lógica de perfil ativo (Pessoal, Profissional, Conjunto), cálculo de saldo consolidado e rateio de despesas.
-* **Emanuel:** Interface gráfica, componentes visuais, cadastro de lançamentos e painel geral.
-* **Vitor Hugo:** Controle de versão no GitHub, resolução de conflitos de código, guia de execução em ambiente limpo, documentação técnica e arquitetura.
+## Tecnologias e arquitetura
 
----
+- Flutter e Dart, com interface Material 3.
+- MVVM: telas em `lib/views/` e estado/orquestração em `lib/viewmodels/` usando `ChangeNotifier`.
+- Repositórios em `lib/repositories/` isolam o acesso às tabelas SQLite.
+- `sqflite` mantém perfis, categorias, lançamentos e despesas compartilhadas no dispositivo. Valores monetários são armazenados em centavos inteiros.
+- `lib/logica/` contém regras Dart sem dependência de tela para seleção de perfil, saldos e divisão de despesas.
+- `test/` contém testes de widgets, persistência, repositórios e regras de negócio.
 
-## 2. Guia de Reprodução e Configuração
+### Estrutura principal
 
-Instruções técnicas para clonagem, compilação e execução do projeto a partir de um ambiente limpo.
+```text
+lib/
+  database/       abertura, criação e migração do SQLite
+  logica/         perfil ativo, saldo e rateio
+  models/         modelos de persistência
+  repositories/   consultas e gravações
+  utils/          formatação de valores e datas
+  viewmodels/     estado e operações da aplicação
+  views/          resumo, movimentos, contextos e formulários
+test/
+  logica/         testes das regras de domínio
+  app_database_test.dart
+  widget_test.dart
+docs/LOGICA.md    detalhes das regras de saldo e rateio
+```
 
-### Requisitos Mínimos
-* **JDK:** Versão 17 ou superior.
-* **Android Studio:** Ladybug ou versão mais recente equivalente.
-* **Android SDK:** Target API Level 34 (Android 14) / Minimum API Level 26.
-* **Dispositivo de Teste:** Emulador AVD ou dispositivo físico com modo de Depuração USB ativo.
+## Requisitos
 
-### Procedimento de Execução
+- Flutter SDK com Dart **3.13.7 ou superior**, conforme a restrição em `pubspec.yaml`.
+- Android Studio e Android SDK configurados.
+- JDK 17 ou superior.
+- Emulador Android ou aparelho com depuração USB habilitada.
 
-1. **Clonar o repositório:**
-   ```bash
-   git clone https://github.com/Dufru/gestao-financeira-multicontextual
-   cd gestao-financeira-multicontextual
+Confira a instalação antes de executar:
 
+```bash
+flutter doctor -v
+```
 
+## Clonar e executar
 
-2. **Abertura do Projeto:**
-* Abrir o Android Studio.
-* Selecionar a opção `Open` e indicar o diretório raiz do projeto clonado.
-* Aguardar o término da sincronização das dependências via Gradle (`Gradle Sync`).
+```bash
+git clone https://github.com/Dufru/gestao-financeira-multicontextual.git
+cd gestao-financeira-multicontextual
+flutter pub get
+flutter run
+```
 
+Para escolher um dispositivo conectado:
 
-3. **Compilação e Execução:**
-* Selecionar o target (emulador ou dispositivo físico).
-* Executar a compilação por meio da opção `Run` (`Shift + F10`).
+```bash
+flutter devices
+flutter run -d ID_DO_DISPOSITIVO
+```
 
+No Android Studio, abra a pasta clonada como projeto Flutter, aguarde a resolução das dependências, selecione um emulador ou aparelho e pressione **Run**.
 
+## Executar os testes
 
----
+```bash
+flutter test
+```
 
-## 3. Estrutura de Testes Automatizados
+O conjunto de testes cobre criação do banco e dados iniciais, operações de repositório, isolamento entre perfis, cálculo de saldos, rateio igualitário e telas principais. O teste SQLite usa `sqflite_common_ffi` no ambiente de testes.
 
-O projeto utiliza testes unitários e de integração para validação da camada de persistência e das regras de consolidação financeira.
+## Fluxo recomendado para demonstração
 
-### Escopo dos Testes
+1. Abra **Resumo** e alterne entre Pessoal, Profissional e Conjunto.
+2. Registre uma entrada ou saída, preenchendo valor, descrição, categoria e data.
+3. Mostre a atualização dos valores do mês e a separação dos lançamentos.
+4. Em **Contextos**, selecione Conjunto e abra a divisão de despesas.
+5. Registre uma despesa paga por uma das pessoas e mostre o acerto calculado.
+6. Reabra o aplicativo para demonstrar que os dados permanecem no aparelho.
 
-* **Testes do Banco de Dados (Room InMemory):** Validação das operações de escrita e leitura dos DAOs, além do isolamento dos lançamentos por perfil.
-* **Testes da Lógica de Negócio (JUnit):** Validação dos algoritmos de consolidação de saldo (evitando dupla contagem) e lógica de divisão no perfil conjunto.
+## Observações sobre dados
 
-Para executar a suíte de testes via linha de comando:
+O banco inicializa os três perfis e nove categorias na primeira abertura. A versão 2 do banco adiciona a tabela de despesas compartilhadas e migra automaticamente bancos criados pela versão 1, preservando os lançamentos existentes. Os dados são locais e não são enviados para um servidor.
 
-bash
-./gradlew test
+## Documentação complementar
+
+- [Lógica de negócio, saldo consolidado e rateio](docs/LOGICA.md)
+- [Documentação Técnica de Implementação e Testes (Bloco 3)](docs/DOCUMENTACAO_TECNICA_BLOCO3.md)
+
+## Contexto acadêmico e equipe
+
+Projeto semestral desenvolvido para a disciplina **Desenvolvimento Mobile Nativo (SIS918)** do curso de **Sistemas de Informação** da **UNEX — Centro Universitário de Excelência de Vitória da Conquista**, sob orientação do Prof. **Wallas Froes de Oliveira**.
+
+**Integrantes:**
+- Danilo Motta Rodrigues
+- Emanuel dos Santos Amaral Nascimento
+- Gabriel da Silva Carvalho
+- Matheus Vinícius Duarte Costa
+- Pedro Santos Simões da Silva
+- Vitor Hugo Lima Silva Bittencourt

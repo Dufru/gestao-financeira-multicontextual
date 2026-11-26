@@ -3,8 +3,10 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:financas_app/database/app_database.dart';
+import 'package:financas_app/models/despesa_compartilhada.dart';
 import 'package:financas_app/models/transacao.dart';
 import 'package:financas_app/repositories/categoria_repository.dart';
+import 'package:financas_app/repositories/despesa_compartilhada_repository.dart';
 import 'package:financas_app/repositories/perfil_repository.dart';
 import 'package:financas_app/repositories/saldo_repository.dart';
 import 'package:financas_app/repositories/transacao_repository.dart';
@@ -15,6 +17,7 @@ void main() {
   final saldoRepo = SaldoRepository();
   final perfilRepo = PerfilRepository();
   final categoriaRepo = CategoriaRepository();
+  final despesaCompartilhadaRepo = DespesaCompartilhadaRepository();
 
   Future<int> novoPerfil(String nome) {
     return db.insert('perfil', {'nome': nome, 'tipo': 'pessoal'});
@@ -52,6 +55,34 @@ void main() {
     test('cria as 9 categorias iniciais', () async {
       final categorias = await db.query('categoria');
       expect(categorias.length, 9);
+    });
+
+    test('cria a tabela de despesas compartilhadas', () async {
+      final tabelas = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'table'",
+      );
+      expect(tabelas.map((linha) => linha['name']),
+          contains('despesa_compartilhada'));
+    });
+
+    test('despesa compartilhada aceita apenas valores positivos', () async {
+      await db.insert('despesa_compartilhada', {
+        'perfil_id': 3,
+        'descricao': 'Conta de luz',
+        'valor_centavos': 15990,
+        'pago_por': 'Você',
+        'data': '2026-11-25',
+      });
+      expect(
+        () => db.insert('despesa_compartilhada', {
+          'perfil_id': 3,
+          'descricao': 'Valor inválido',
+          'valor_centavos': 0,
+          'pago_por': 'Você',
+          'data': '2026-11-25',
+        }),
+        throwsA(isA<DatabaseException>()),
+      );
     });
 
     test('aceita uma transacao valida', () async {
@@ -325,6 +356,32 @@ void main() {
       final consolidado = await saldoRepo.resumoConsolidado();
 
       expect(consolidado.saldoCentavos, somaDosSaldos);
+    });
+  });
+
+  group('Repositorio de despesas compartilhadas', () {
+    test('insere, lista e exclui uma despesa compartilhada', () async {
+      final id = await despesaCompartilhadaRepo.inserir(
+        DespesaCompartilhada(
+          perfilId: 3,
+          descricao: 'Internet residencial',
+          valorCentavos: 12000,
+          pagoPor: 'Você',
+          data: DateTime(2026, 11, 10),
+        ),
+      );
+
+      final lista = await despesaCompartilhadaRepo.listar(3);
+      final encontrada = lista.firstWhere((d) => d.id == id);
+
+      expect(encontrada.descricao, 'Internet residencial');
+      expect(encontrada.valorCentavos, 12000);
+      expect(encontrada.pagoPor, 'Você');
+
+      await despesaCompartilhadaRepo.excluir(id);
+
+      final aposExclusao = await despesaCompartilhadaRepo.listar(3);
+      expect(aposExclusao.where((d) => d.id == id), isEmpty);
     });
   });
 }

@@ -6,7 +6,7 @@ class AppDatabase {
   static final AppDatabase instance = AppDatabase._();
 
   static const _nomeBanco = 'financas.db';
-  static const _versao = 1;
+  static const _versao = 2;
 
   Database? _db;
 
@@ -24,6 +24,7 @@ class AppDatabase {
       version: _versao,
       onConfigure: _onConfigure,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -70,7 +71,32 @@ class AppDatabase {
       'CREATE INDEX idx_transacao_perfil_data ON transacao (perfil_id, data)',
     );
 
+    await _criarTabelaDespesasCompartilhadas(db);
+
     await _inserirDadosIniciais(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _criarTabelaDespesasCompartilhadas(db);
+    }
+  }
+
+  Future<void> _criarTabelaDespesasCompartilhadas(Database db) async {
+    await db.execute('''
+      CREATE TABLE despesa_compartilhada (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        perfil_id       INTEGER NOT NULL,
+        descricao       TEXT NOT NULL,
+        valor_centavos  INTEGER NOT NULL CHECK (valor_centavos > 0),
+        pago_por        TEXT NOT NULL,
+        data            TEXT NOT NULL,
+        FOREIGN KEY (perfil_id) REFERENCES perfil (id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX idx_despesa_compartilhada_perfil_data ON despesa_compartilhada (perfil_id, data)',
+    );
   }
 
   Future<void> _inserirDadosIniciais(Database db) async {
